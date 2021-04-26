@@ -45,4 +45,30 @@
 - (void) crypto_box_seal:(NSString*)m pk:(NSString*)pk resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 - (void) crypto_box_seal_open:(NSString*)c pk:(NSString*)pk sk:(NSString*)sk resolve: (RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
+- (void) crypto_core_ed25519_random:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_from_uniform:(NSString*)r resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_add:(NSString*)p q:(NSString*)q resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_sub:(NSString*)p q:(NSString*)q resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_is_valid_point:(NSString*)p resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
+- (void) crypto_core_ed25519_scalar_random:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_scalar_add:(NSString*)x y:(NSString*)y resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_scalar_sub:(NSString*)x y:(NSString*)y resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_scalar_mul:(NSString*)x y:(NSString*)y resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_scalar_negate:(NSString*)s resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_scalar_complement:(NSString*)s resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_scalar_invert:(NSString*)s resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_core_ed25519_scalar_reduce:(NSString*)s resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
+- (void) crypto_scalarmult_ed25519:(NSString*)n p:(NSString*)p resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_scalarmult_ed25519_noclamp:(NSString*)n p:(NSString*)p resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_scalarmult_ed25519_base:(NSString*)n resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_scalarmult_ed25519_base_noclamp:(NSString*)n resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
+- (void) crypto_generichash:(NSUInteger)hash_length msg:(NSString*)msg key:(NSString*)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
+- (void) crypto_aead_chacha20poly1305_ietf_keygen:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_aead_xchacha20poly1305_ietf_encrypt:(NSString*)message additional_data:(NSString*)additional_data secret_nonce:(NSString*)secret_nonce public_nonce:(NSString*)public_nonce key:(NSString*)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void) crypto_aead_xchacha20poly1305_ietf_decrypt:(NSString*)secret_nonce ciphertext:(NSString*)ciphertext additional_data:(NSString*)additional_data public_nonce:(NSString*)public_nonce key:(NSString*)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+
 @end

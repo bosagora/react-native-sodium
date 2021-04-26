@@ -68,7 +68,13 @@ RCT_EXPORT_MODULE();
     @"crypto_pwhash_ALG_ARGON2I13":@crypto_pwhash_ALG_ARGON2I13,
     @"crypto_pwhash_ALG_ARGON2ID13":@crypto_pwhash_ALG_ARGON2ID13,
     @"crypto_scalarmult_BYTES":@crypto_scalarmult_BYTES,
-    @"crypto_scalarmult_SCALARBYTES":@crypto_scalarmult_SCALARBYTES
+    @"crypto_scalarmult_SCALARBYTES":@crypto_scalarmult_SCALARBYTES,
+    @"crypto_core_ed25519_BYTES":@crypto_core_ed25519_BYTES,
+    @"crypto_core_ed25519_UNIFORMBYTES":@crypto_core_ed25519_UNIFORMBYTES,
+    @"crypto_core_ed25519_SCALARBYTES":@crypto_core_ed25519_SCALARBYTES,
+    @"crypto_core_ed25519_NONREDUCEDSCALARBYTES":@crypto_core_ed25519_NONREDUCEDSCALARBYTES,
+    @"crypto_aead_xchacha20poly1305_ietf_KEYBYTES":@crypto_aead_xchacha20poly1305_ietf_KEYBYTES,
+    @"crypto_aead_xchacha20poly1305_ietf_NPUBBYTES":@crypto_aead_xchacha20poly1305_ietf_NPUBBYTES,
   };
 
 }
@@ -500,6 +506,525 @@ RCT_EXPORT_METHOD(crypto_sign_ed25519_sk_to_pk:(NSString*)sk resolve: (RCTPromis
   else {
     resolve([[NSData dataWithBytesNoCopy:pk length:crypto_sign_PUBLICKEYBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
   }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_random:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    unsigned char *p = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+
+    if (p == NULL) {
+        reject(ESODIUM,ERR_FAILURE,nil);
+    } else {
+        crypto_core_ed25519_random(p);
+        resolve([[NSData dataWithBytesNoCopy:p length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+        sodium_free(p);
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_from_uniform:(NSString*)r resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dr = [[NSData alloc] initWithBase64EncodedString:r options:0];
+
+    if (!dr)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if (dr.length != crypto_core_ed25519_BYTES)
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *p = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!p)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_from_uniform(p, [dr bytes]);
+            resolve([[NSData dataWithBytesNoCopy:p length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(p);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_add:(NSString*)p q:(NSString*)q resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+    const NSData *dq = [[NSData alloc] initWithBase64EncodedString:q options:0];
+
+    if (!dp || !dq)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if ((dp.length != crypto_core_ed25519_BYTES) || (dq.length != crypto_core_ed25519_BYTES))
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *r = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!r)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_add(r, [dp bytes], [dq bytes]);
+            resolve([[NSData dataWithBytesNoCopy:r length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(r);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_sub:(NSString*)p q:(NSString*)q resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+    const NSData *dq = [[NSData alloc] initWithBase64EncodedString:q options:0];
+
+    if (!dp || !dq)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if ((dp.length != crypto_core_ed25519_BYTES) || (dq.length != crypto_core_ed25519_BYTES))
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *r = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!r)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_sub(r, [dp bytes], [dq bytes]);
+            resolve([[NSData dataWithBytesNoCopy:r length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(r);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_is_valid_point:(NSString*)p resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+
+    if (!dp)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if (dp.length != crypto_core_ed25519_BYTES)
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        int result = crypto_core_ed25519_is_valid_point([dp bytes]);
+        resolve(@(result));
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_scalar_random:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    unsigned char *r = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+    if (r == NULL) {
+        reject(ESODIUM,ERR_FAILURE,nil);
+    } else {
+        crypto_core_ed25519_scalar_random(r);
+        resolve([[NSData dataWithBytesNoCopy:r length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+        sodium_free(r);
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_scalar_add:(NSString*)x y:(NSString*)y resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dx = [[NSData alloc] initWithBase64EncodedString:x options:0];
+    const NSData *dy = [[NSData alloc] initWithBase64EncodedString:y options:0];
+
+    if (!dx || !dy)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if ((dx.length != crypto_core_ed25519_BYTES) || (dy.length != crypto_core_ed25519_BYTES))
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *z = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!z)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_scalar_add(z, [dx bytes], [dy bytes]);
+            resolve([[NSData dataWithBytesNoCopy:z length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(z);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_scalar_sub:(NSString*)x y:(NSString*)y resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dx = [[NSData alloc] initWithBase64EncodedString:x options:0];
+    const NSData *dy = [[NSData alloc] initWithBase64EncodedString:y options:0];
+
+    if (!dx || !dy)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if ((dx.length != crypto_core_ed25519_BYTES) || (dy.length != crypto_core_ed25519_BYTES))
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *z = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!z)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_scalar_sub(z, [dx bytes], [dy bytes]);
+            resolve([[NSData dataWithBytesNoCopy:z length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(z);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_scalar_mul:(NSString*)x y:(NSString*)y resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dx = [[NSData alloc] initWithBase64EncodedString:x options:0];
+    const NSData *dy = [[NSData alloc] initWithBase64EncodedString:y options:0];
+
+    if (!dx || !dy)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if ((dx.length != crypto_core_ed25519_BYTES) || (dy.length != crypto_core_ed25519_BYTES))
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *z = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!z)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_scalar_mul(z, [dx bytes], [dy bytes]);
+            resolve([[NSData dataWithBytesNoCopy:z length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(z);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_scalar_negate:(NSString*)s resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *ds = [[NSData alloc] initWithBase64EncodedString:s options:0];
+
+    if (!ds)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if (ds.length != crypto_core_ed25519_SCALARBYTES)
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!res)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_scalar_negate(res, [ds bytes]);
+            resolve([[NSData dataWithBytesNoCopy:res length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(res);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_scalar_complement:(NSString*)s resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *ds = [[NSData alloc] initWithBase64EncodedString:s options:0];
+
+    if (!ds)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if (ds.length != crypto_core_ed25519_SCALARBYTES)
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!res)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_scalar_complement(res, [ds bytes]);
+            resolve([[NSData dataWithBytesNoCopy:res length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(res);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_scalar_invert:(NSString*)s resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *ds = [[NSData alloc] initWithBase64EncodedString:s options:0];
+
+    if (!ds)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if (ds.length != crypto_core_ed25519_SCALARBYTES)
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!res)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_scalar_invert(res, [ds bytes]);
+            resolve([[NSData dataWithBytesNoCopy:res length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(res);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_core_ed25519_scalar_reduce:(NSString*)s resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *ds = [[NSData alloc] initWithBase64EncodedString:s options:0];
+
+    if (!ds)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if (ds.length != crypto_core_ed25519_NONREDUCEDSCALARBYTES)
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!res)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            crypto_core_ed25519_scalar_reduce(res, [ds bytes]);
+            resolve([[NSData dataWithBytesNoCopy:res length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(res);
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_scalarmult_ed25519:(NSString*)n p:(NSString*)p resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dn = [[NSData alloc] initWithBase64EncodedString:n options:0];
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+
+    if (!dn || !dp)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if ((dn.length != crypto_core_ed25519_SCALARBYTES) || (dp.length != crypto_core_ed25519_BYTES))
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *q = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!q)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            if (crypto_scalarmult_ed25519(q, [dn bytes], [dp bytes]) != 0)
+              reject(ESODIUM,ERR_FAILURE, nil);
+            else
+              resolve([[NSData dataWithBytesNoCopy:q length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(q);
+        }
+   }
+}
+
+RCT_EXPORT_METHOD(crypto_scalarmult_ed25519_noclamp:(NSString*)n p:(NSString*)p resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dn = [[NSData alloc] initWithBase64EncodedString:n options:0];
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+
+    if (!dn || !dp)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if ((dn.length != crypto_core_ed25519_SCALARBYTES) || (dp.length != crypto_core_ed25519_BYTES))
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *q = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!q)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            if (crypto_scalarmult_ed25519_noclamp(q, [dn bytes], [dp bytes]) != 0)
+              reject(ESODIUM,ERR_FAILURE, nil);
+            else
+              resolve([[NSData dataWithBytesNoCopy:q length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(q);
+        }
+   }
+}
+
+RCT_EXPORT_METHOD(crypto_scalarmult_ed25519_base:(NSString*)n resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dn = [[NSData alloc] initWithBase64EncodedString:n options:0];
+
+    if (!dn)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if (dn.length != crypto_core_ed25519_SCALARBYTES)
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *q = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!q)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            if (crypto_scalarmult_ed25519_base(q, [dn bytes]) != 0)
+              reject(ESODIUM,ERR_FAILURE, nil);
+            else
+              resolve([[NSData dataWithBytesNoCopy:q length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(q);
+        }
+   }
+}
+
+RCT_EXPORT_METHOD(crypto_scalarmult_ed25519_base_noclamp:(NSString*)n resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *dn = [[NSData alloc] initWithBase64EncodedString:n options:0];
+
+    if (!dn)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else if (dn.length != crypto_core_ed25519_SCALARBYTES)
+        reject(ESODIUM,ERR_BAD_KEY,nil);
+    else {
+        unsigned char *q = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!q)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            if (crypto_scalarmult_ed25519_base_noclamp(q, [dn bytes]) != 0)
+              reject(ESODIUM,ERR_FAILURE, nil);
+            else
+              resolve([[NSData dataWithBytesNoCopy:q length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(q);
+        }
+   }
+}
+
+RCT_EXPORT_METHOD(crypto_generichash:(NSUInteger)hash_length msg:(NSString*)msg key:(NSString*)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *d_msg = [[NSData alloc] initWithBase64EncodedString:msg options:0];
+    const NSData *d_key;
+    unsigned char *p_key = nil;
+    unsigned long long n_key = 0;
+
+    if ([key length] > 0)
+    {
+        d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
+        p_key = [d_key bytes];
+        n_key = [d_key length];
+    }
+
+    if (!d_msg)
+        reject(ESODIUM,ERR_FAILURE,nil);
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(hash_length);
+        if (!res)
+            reject(ESODIUM,ERR_FAILURE,nil);
+        else {
+            int result= crypto_generichash(res, (u_int32_t)hash_length, [d_msg bytes], d_msg.length, p_key, n_key);
+            if (result != 0)
+                reject(ESODIUM,ERR_FAILURE,nil);
+            else
+                resolve([[NSData dataWithBytesNoCopy:res length:hash_length freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            sodium_free(res);
+        }
+    }
+}
+
+
+RCT_EXPORT_METHOD(crypto_aead_chacha20poly1305_ietf_keygen:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    unsigned char *p = (unsigned char *) sodium_malloc(crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
+
+    if (p == NULL) {
+        reject(ESODIUM,ERR_FAILURE,nil);
+    } else {
+        crypto_aead_chacha20poly1305_ietf_keygen(p);
+        resolve([[NSData dataWithBytesNoCopy:p length:crypto_aead_xchacha20poly1305_ietf_KEYBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+        sodium_free(p);
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_aead_xchacha20poly1305_ietf_encrypt:(NSString*)message additional_data:(NSString*)additional_data secret_nonce:(NSString*)secret_nonce public_nonce:(NSString*)public_nonce key:(NSString*)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *d_message;
+    const NSData *d_additional_data;
+    const NSData *d_secret_nonce;
+    const NSData *d_public_nonce;
+    const NSData *d_key;
+  
+    unsigned char *p_message = nil;
+    unsigned char *p_additional_data = nil;
+    unsigned char *p_secret_nonce = nil;
+    unsigned char *p_public_nonce = nil;
+    unsigned char *p_key = nil;
+
+    unsigned long long n_message = 0;
+    unsigned long long n_additional_data = 0;
+
+    d_message = [[NSData alloc] initWithBase64EncodedString:message options:0];
+    p_message = [d_message bytes];
+    n_message = [d_message length];
+
+    if ([additional_data length] > 0)
+    {
+        d_additional_data = [[NSData alloc] initWithBase64EncodedString:additional_data options:0];
+        p_additional_data = [d_additional_data bytes];
+        n_additional_data = [d_additional_data length];
+    }
+
+    if ([secret_nonce length] > 0)
+    {
+        d_secret_nonce = [[NSData alloc] initWithBase64EncodedString:secret_nonce options:0];
+        p_secret_nonce = [d_secret_nonce bytes];
+    }
+
+    if ([public_nonce length] > 0)
+    {
+        d_public_nonce = [[NSData alloc] initWithBase64EncodedString:public_nonce options:0];
+        p_public_nonce = [d_public_nonce bytes];
+    }
+
+    if ([secret_nonce length] > 0)
+    {
+        d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
+        p_key = [d_key bytes];
+    }
+    unsigned char *p_ciphertext = (unsigned char *) sodium_malloc(n_message + 16);
+    unsigned long long ciphertext_len;
+
+    if (p_ciphertext == NULL) {
+        reject(ESODIUM,ERR_FAILURE,nil);
+    } else {
+        int result = crypto_aead_xchacha20poly1305_ietf_encrypt(
+            p_ciphertext,
+            &ciphertext_len,
+            p_message,
+            n_message,
+            p_additional_data,
+            n_additional_data,
+            p_secret_nonce,
+            p_public_nonce,
+            p_key);
+
+        if (result != 0)
+          reject(ESODIUM,ERR_FAILURE, nil);
+
+        resolve([[NSData dataWithBytesNoCopy:p_ciphertext length:ciphertext_len freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+        sodium_free(p_ciphertext);
+    }
+}
+
+RCT_EXPORT_METHOD(crypto_aead_xchacha20poly1305_ietf_decrypt:(NSString*)secret_nonce ciphertext:(NSString*)ciphertext additional_data:(NSString*)additional_data public_nonce:(NSString*)public_nonce key:(NSString*)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
+{
+    const NSData *d_ciphertext;
+    const NSData *d_additional_data;
+    const NSData *d_secret_nonce;
+    const NSData *d_public_nonce;
+    const NSData *d_key;
+
+    unsigned char *p_ciphertext = nil;
+    unsigned char *p_additional_data = nil;
+    unsigned char *p_secret_nonce = nil;
+    unsigned char *p_public_nonce = nil;
+    unsigned char *p_key = nil;
+
+    unsigned long long n_ciphertext = 0;
+    unsigned long long n_additional_data = 0;
+
+    d_ciphertext = [[NSData alloc] initWithBase64EncodedString:ciphertext options:0];
+    p_ciphertext = [d_ciphertext bytes];
+    n_ciphertext = [d_ciphertext length];
+
+    if ([additional_data length] > 0)
+    {
+        d_additional_data = [[NSData alloc] initWithBase64EncodedString:additional_data options:0];
+        p_additional_data = [d_additional_data bytes];
+        n_additional_data = [d_additional_data length];
+    }
+
+    if ([secret_nonce length] > 0)
+    {
+        d_secret_nonce = [[NSData alloc] initWithBase64EncodedString:secret_nonce options:0];
+        p_secret_nonce = [d_secret_nonce bytes];
+    }
+
+    if ([public_nonce length] > 0)
+    {
+        d_public_nonce = [[NSData alloc] initWithBase64EncodedString:public_nonce options:0];
+        p_public_nonce = [d_public_nonce bytes];
+    }
+
+    if ([secret_nonce length] > 0)
+    {
+        d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
+        p_key = [d_key bytes];
+    }
+    unsigned char *p_message = (unsigned char *) sodium_malloc(n_ciphertext);
+    unsigned long long n_message;
+
+    if (p_message == NULL) {
+        reject(ESODIUM,ERR_FAILURE,nil);
+    } else {
+        int result = crypto_aead_xchacha20poly1305_ietf_decrypt(
+            p_message,
+            &n_message,
+            p_secret_nonce,
+            p_ciphertext,
+            n_ciphertext,
+            p_additional_data,
+            n_additional_data,
+            p_public_nonce,
+            p_key);
+
+        if (result != 0)
+          reject(ESODIUM,ERR_FAILURE, nil);
+
+        resolve([[NSData dataWithBytesNoCopy:p_message length:n_message freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+        sodium_free(p_message);
+    }
 }
 
 @end

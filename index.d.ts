@@ -374,4 +374,56 @@ declare module "react-native-sodium" {
    * Version 1.3 of the Argon2id algorithm, available since libsodium 1.0.13.
    */
   export const crypto_pwhash_ALG_ARGON2ID13: number;
+
+  export function crypto_core_ed25519_random(): Promise<string>;
+  export function crypto_core_ed25519_from_uniform(r: string): Promise<string>;
+  export function crypto_core_ed25519_add(p: string, q: string): Promise<string>;
+  export function crypto_core_ed25519_sub(p: string, q: string): Promise<string>;
+  export function crypto_core_ed25519_is_valid_point(p: string): Promise<number>;
+  export function crypto_core_ed25519_scalar_random(): Promise<string>;
+  export function crypto_core_ed25519_scalar_add(x: string, y: string): Promise<string>;
+  export function crypto_core_ed25519_scalar_sub(x: string, y: string): Promise<string>;
+  export function crypto_core_ed25519_scalar_negate(s: string): Promise<string>;
+  export function crypto_core_ed25519_scalar_complement(s: string): Promise<string>;
+  export function crypto_core_ed25519_scalar_mul(x: string, y: string): Promise<string>;
+  export function crypto_core_ed25519_scalar_invert(s: string): Promise<string>;
+  export function crypto_core_ed25519_scalar_reduce(s: string): Promise<string>;
+
+  export function crypto_scalarmult_ed25519(n: string, p: string): Promise<string>;
+  export function crypto_scalarmult_ed25519_base(n: string): Promise<string>;
+  export function crypto_scalarmult_ed25519_base_noclamp(n: string): Promise<string>;
+  export function crypto_scalarmult_ed25519_noclamp(n: string, p: string): Promise<string>;
+
+  export function crypto_generichash(
+          hash_length: string,
+          message: string,
+          key: string
+    ): Promise<string>;
+
+  export function crypto_generichash_init(key: string, hash_length: string): Promise<string>;
+  export function crypto_generichash_update(
+          state_address: string,
+          message_chunk: string
+    ): Promise<void>;
+  export function crypto_generichash_final(
+          state_address: string,
+          hash_length: string
+    ): Promise<string>;
+
+  export function crypto_aead_chacha20poly1305_ietf_keygen(): Promise<string>;
+  export function crypto_aead_xchacha20poly1305_ietf_encrypt(
+          message: string,
+          additional_data: string,
+          secret_nonce: string,
+          public_nonce: string,
+          key: string
+    ): Promise<string>;
+
+  export function crypto_aead_xchacha20poly1305_ietf_decrypt(
+          secret_nonce: string,
+          ciphertext: string,
+          additional_data: string,
+          public_nonce: string,
+          key: string
+    ): Promise<string>;
 }
