@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export LIBSODIUM_FULL_BUILD="1"
+
 sha512sumfile=`ls -1 libsodium-*.tar.gz.sha512sum`
 srcfile=`basename $sha512sumfile .sha512sum`
 srcdir=`basename $srcfile .tar.gz`
