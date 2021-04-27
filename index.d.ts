@@ -426,4 +426,48 @@ declare module "react-native-sodium" {
           public_nonce: string,
           key: string
     ): Promise<string>;
+
+
+
+  export function crypto_core_ed25519_random_sync(): string;
+  export function crypto_core_ed25519_from_uniform_sync(r: string): string;
+  export function crypto_core_ed25519_add_sync(p: string, q: string): string;
+  export function crypto_core_ed25519_sub_sync(p: string, q: string): string;
+  export function crypto_core_ed25519_is_valid_point_sync(p: string): string;
+  export function crypto_core_ed25519_scalar_random_sync(): string;
+  export function crypto_core_ed25519_scalar_add_sync(x: string, y: string): string;
+  export function crypto_core_ed25519_scalar_sub_sync(x: string, y: string): string;
+  export function crypto_core_ed25519_scalar_negate_sync(s: string): string;
+  export function crypto_core_ed25519_scalar_complement_sync(s: string): string;
+  export function crypto_core_ed25519_scalar_mul_sync(x: string, y: string): string;
+  export function crypto_core_ed25519_scalar_invert_sync(s: string): string;
+  export function crypto_core_ed25519_scalar_reduce_sync(s: string): string;
+
+  export function crypto_scalarmult_ed25519_sync(n: string, p: string): string;
+  export function crypto_scalarmult_ed25519_base_sync(n: string): string;
+  export function crypto_scalarmult_ed25519_base_noclamp_sync(n: string): string;
+  export function crypto_scalarmult_ed25519_noclamp_sync(n: string, p: string): string;
+
+  export function crypto_generichash_sync(
+      hash_length: string,
+      message: string,
+      key: string
+  ): string;
+
+  export function crypto_aead_chacha20poly1305_ietf_keygen_sync(): string;
+  export function crypto_aead_xchacha20poly1305_ietf_encrypt_sync(
+      message: string,
+      additional_data: string,
+      secret_nonce: string,
+      public_nonce: string,
+      key: string
+  ): string;
+
+  export function crypto_aead_xchacha20poly1305_ietf_decrypt_sync(
+      secret_nonce: string,
+      ciphertext: string,
+      additional_data: string,
+      public_nonce: string,
+      key: string
+  ): string;
 }

@@ -1,6 +1,6 @@
 {
     "name": "react-native-sodium-boa",
-    "version": "0.0.10",
+    "version": "0.0.12",
     "description": "The Sodium crypto library for React Native",
     "nativePackage": true,
     "main": "index.js",

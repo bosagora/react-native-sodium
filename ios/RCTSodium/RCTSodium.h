@@ -71,4 +71,31 @@
 - (void) crypto_aead_xchacha20poly1305_ietf_encrypt:(NSString*)message additional_data:(NSString*)additional_data secret_nonce:(NSString*)secret_nonce public_nonce:(NSString*)public_nonce key:(NSString*)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 - (void) crypto_aead_xchacha20poly1305_ietf_decrypt:(NSString*)secret_nonce ciphertext:(NSString*)ciphertext additional_data:(NSString*)additional_data public_nonce:(NSString*)public_nonce key:(NSString*)key resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
+- (NSString*) crypto_core_ed25519_random_sync;
+- (NSString*) crypto_core_ed25519_from_uniform_sync:(NSString*)r;
+- (NSString*) crypto_core_ed25519_add_sync:(NSString*)p q:(NSString*)q;
+- (NSString*) crypto_core_ed25519_sub_sync:(NSString*)p q:(NSString*)q;
+- (NSString*) crypto_core_ed25519_is_valid_point_sync:(NSString*)p;
+
+- (NSString*) crypto_core_ed25519_scalar_random_sync;
+- (NSString*) crypto_core_ed25519_scalar_add_sync:(NSString*)x y:(NSString*)y;
+- (NSString*) crypto_core_ed25519_scalar_sub_sync:(NSString*)x y:(NSString*)y;
+- (NSString*) crypto_core_ed25519_scalar_mul_sync:(NSString*)x y:(NSString*)y;
+- (NSString*) crypto_core_ed25519_scalar_negate_sync:(NSString*)s;
+- (NSString*) crypto_core_ed25519_scalar_complement_sync:(NSString*)s;
+- (NSString*) crypto_core_ed25519_scalar_invert_sync:(NSString*)s;
+- (NSString*) crypto_core_ed25519_scalar_reduce_sync:(NSString*)s;
+
+- (NSString*) crypto_scalarmult_ed25519_sync:(NSString*)n p:(NSString*)p;
+- (NSString*) crypto_scalarmult_ed25519_noclamp_sync:(NSString*)n p:(NSString*)p;
+- (NSString*) crypto_scalarmult_ed25519_base_sync:(NSString*)n;
+- (NSString*) crypto_scalarmult_ed25519_base_noclamp_sync:(NSString*)n;
+
+- (NSString*) randombytes_buf_sync:(NSUInteger)size;
+- (NSString*) crypto_generichash_sync:(NSUInteger)hash_length msg:(NSString*)msg key:(NSString*)key;
+
+- (NSString*) crypto_aead_chacha20poly1305_ietf_keygen_sync;
+- (NSString*) crypto_aead_xchacha20poly1305_ietf_encrypt_sync:(NSString*)message additional_data:(NSString*)additional_data secret_nonce:(NSString*)secret_nonce public_nonce:(NSString*)public_nonce key:(NSString*)key;
+- (NSString*) crypto_aead_xchacha20poly1305_ietf_decrypt_sync:(NSString*)secret_nonce ciphertext:(NSString*)ciphertext additional_data:(NSString*)additional_data public_nonce:(NSString*)public_nonce key:(NSString*)key;
+
 @end

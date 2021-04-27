@@ -24,6 +24,9 @@ NSString * const ERR_BAD_SEED = @"BAD_SEED";
 NSString * const ERR_BAD_SIG = @"BAD_SIG";
 NSString * const ERR_FAILURE = @"FAILURE";
 
+NSString * const ERR_CODE_FAILURE = @"FAILURE";
+NSString * const RES_CODE_SUCCESS = @"SUCCESS";
+
 RCT_EXPORT_MODULE();
 
 + (void) initialize
@@ -894,7 +897,7 @@ RCT_EXPORT_METHOD(crypto_aead_xchacha20poly1305_ietf_encrypt:(NSString*)message 
     const NSData *d_secret_nonce;
     const NSData *d_public_nonce;
     const NSData *d_key;
-  
+
     unsigned char *p_message = nil;
     unsigned char *p_additional_data = nil;
     unsigned char *p_secret_nonce = nil;
@@ -950,9 +953,9 @@ RCT_EXPORT_METHOD(crypto_aead_xchacha20poly1305_ietf_encrypt:(NSString*)message 
             p_key);
 
         if (result != 0)
-          reject(ESODIUM,ERR_FAILURE, nil);
-
-        resolve([[NSData dataWithBytesNoCopy:p_ciphertext length:ciphertext_len freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            reject(ESODIUM,ERR_FAILURE, nil);
+        else
+            resolve([[NSData dataWithBytesNoCopy:p_ciphertext length:ciphertext_len freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
         sodium_free(p_ciphertext);
     }
 }
@@ -1020,11 +1023,785 @@ RCT_EXPORT_METHOD(crypto_aead_xchacha20poly1305_ietf_decrypt:(NSString*)secret_n
             p_key);
 
         if (result != 0)
-          reject(ESODIUM,ERR_FAILURE, nil);
-
-        resolve([[NSData dataWithBytesNoCopy:p_message length:n_message freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
+            reject(ESODIUM,ERR_FAILURE, nil);
+        else
+            resolve([[NSData dataWithBytesNoCopy:p_message length:n_message freeWhenDone:NO]  base64EncodedStringWithOptions:0]);
         sodium_free(p_message);
     }
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_random_sync)
+{
+    unsigned char *p = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (p == NULL) {
+        res_code = ERR_CODE_FAILURE;
+    } else {
+        crypto_core_ed25519_random(p);
+        res_data = [[NSData dataWithBytesNoCopy:p length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+        sodium_free(p);
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_from_uniform_sync:(NSString*)r)
+{
+    const NSData *dr = [[NSData alloc] initWithBase64EncodedString:r options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dr)
+        res_code = ERR_CODE_FAILURE;
+    else if (dr.length != crypto_core_ed25519_BYTES)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *p = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!p)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_from_uniform(p, [dr bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:p length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(p);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_add_sync:(NSString*)p q:(NSString*)q)
+{
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+    const NSData *dq = [[NSData alloc] initWithBase64EncodedString:q options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dp || !dq)
+        res_code = ERR_CODE_FAILURE;
+    else if ((dp.length != crypto_core_ed25519_BYTES) || (dq.length != crypto_core_ed25519_BYTES))
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *r = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!r)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_add(r, [dp bytes], [dq bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:r length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(r);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_sub_sync:(NSString*)p q:(NSString*)q)
+{
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+    const NSData *dq = [[NSData alloc] initWithBase64EncodedString:q options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dp || !dq)
+        res_code = ERR_CODE_FAILURE;
+    else if ((dp.length != crypto_core_ed25519_BYTES) || (dq.length != crypto_core_ed25519_BYTES))
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *r = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!r)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_sub(r, [dp bytes], [dq bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:r length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(r);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_is_valid_point_sync:(NSString*)p)
+{
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dp)
+        res_code = ERR_CODE_FAILURE;
+    else if (dp.length != crypto_core_ed25519_BYTES)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        int result = crypto_core_ed25519_is_valid_point([dp bytes]);
+        res_data = [NSString stringWithFormat:@"%d", result];
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_scalar_random_sync)
+{
+    unsigned char *r = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (r == NULL) {
+        res_code = ERR_CODE_FAILURE;
+    } else {
+        crypto_core_ed25519_scalar_random(r);
+        res_data = [[NSData dataWithBytesNoCopy:r length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+        sodium_free(r);
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_scalar_add_sync:(NSString*)x y:(NSString*)y)
+{
+    const NSData *dx = [[NSData alloc] initWithBase64EncodedString:x options:0];
+    const NSData *dy = [[NSData alloc] initWithBase64EncodedString:y options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dx || !dy)
+        res_code = ERR_CODE_FAILURE;
+    else if ((dx.length != crypto_core_ed25519_BYTES) || (dy.length != crypto_core_ed25519_BYTES))
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *z = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!z)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_scalar_add(z, [dx bytes], [dy bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:z length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(z);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_scalar_sub_sync:(NSString*)x y:(NSString*)y)
+{
+    const NSData *dx = [[NSData alloc] initWithBase64EncodedString:x options:0];
+    const NSData *dy = [[NSData alloc] initWithBase64EncodedString:y options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dx || !dy)
+        res_code = ERR_CODE_FAILURE;
+    else if ((dx.length != crypto_core_ed25519_BYTES) || (dy.length != crypto_core_ed25519_BYTES))
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *z = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!z)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_scalar_sub(z, [dx bytes], [dy bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:z length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(z);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_scalar_mul_sync:(NSString*)x y:(NSString*)y)
+{
+    const NSData *dx = [[NSData alloc] initWithBase64EncodedString:x options:0];
+    const NSData *dy = [[NSData alloc] initWithBase64EncodedString:y options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dx || !dy)
+        res_code = ERR_CODE_FAILURE;
+    else if ((dx.length != crypto_core_ed25519_BYTES) || (dy.length != crypto_core_ed25519_BYTES))
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *z = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!z)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_scalar_mul(z, [dx bytes], [dy bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:z length:crypto_core_ed25519_BYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(z);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_scalar_negate_sync:(NSString*)s)
+{
+    const NSData *ds = [[NSData alloc] initWithBase64EncodedString:s options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!ds)
+        res_code = ERR_CODE_FAILURE;
+    else if (ds.length != crypto_core_ed25519_SCALARBYTES)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!res)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_scalar_negate(res, [ds bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:res length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(res);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_scalar_complement_sync:(NSString*)s)
+{
+    const NSData *ds = [[NSData alloc] initWithBase64EncodedString:s options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!ds)
+        res_code = ERR_CODE_FAILURE;
+    else if (ds.length != crypto_core_ed25519_SCALARBYTES)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!res)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_scalar_complement(res, [ds bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:res length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(res);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_scalar_invert_sync:(NSString*)s)
+{
+    const NSData *ds = [[NSData alloc] initWithBase64EncodedString:s options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!ds)
+        res_code = ERR_CODE_FAILURE;
+    else if (ds.length != crypto_core_ed25519_SCALARBYTES)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!res)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_scalar_invert(res, [ds bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:res length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(res);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_core_ed25519_scalar_reduce_sync:(NSString*)s)
+{
+    const NSData *ds = [[NSData alloc] initWithBase64EncodedString:s options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!ds)
+        res_code = ERR_CODE_FAILURE;
+    else if (ds.length != crypto_core_ed25519_NONREDUCEDSCALARBYTES)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(crypto_core_ed25519_SCALARBYTES);
+        if (!res)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            crypto_core_ed25519_scalar_reduce(res, [ds bytes]);
+            res_data = [[NSData dataWithBytesNoCopy:res length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(res);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_scalarmult_ed25519_sync:(NSString*)n p:(NSString*)p)
+{
+    const NSData *dn = [[NSData alloc] initWithBase64EncodedString:n options:0];
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dn || !dp)
+        res_code = ERR_CODE_FAILURE;
+    else if ((dn.length != crypto_core_ed25519_SCALARBYTES) || (dp.length != crypto_core_ed25519_BYTES))
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *q = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!q)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            if (crypto_scalarmult_ed25519(q, [dn bytes], [dp bytes]) != 0)
+                res_code = ERR_CODE_FAILURE;
+            else
+                res_data = [[NSData dataWithBytesNoCopy:q length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(q);
+        }
+   }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_scalarmult_ed25519_noclamp_sync:(NSString*)n p:(NSString*)p)
+{
+    const NSData *dn = [[NSData alloc] initWithBase64EncodedString:n options:0];
+    const NSData *dp = [[NSData alloc] initWithBase64EncodedString:p options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dn || !dp)
+        res_code = ERR_CODE_FAILURE;
+    else if ((dn.length != crypto_core_ed25519_SCALARBYTES) || (dp.length != crypto_core_ed25519_BYTES))
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *q = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!q)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            if (crypto_scalarmult_ed25519_noclamp(q, [dn bytes], [dp bytes]) != 0)
+                res_code = ERR_CODE_FAILURE;
+            else
+                res_data = [[NSData dataWithBytesNoCopy:q length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(q);
+        }
+   }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_scalarmult_ed25519_base_sync:(NSString*)n)
+{
+    const NSData *dn = [[NSData alloc] initWithBase64EncodedString:n options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dn)
+        res_code = ERR_CODE_FAILURE;
+    else if (dn.length != crypto_core_ed25519_SCALARBYTES)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *q = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!q)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            if (crypto_scalarmult_ed25519_base(q, [dn bytes]) != 0)
+                res_code = ERR_CODE_FAILURE;
+            else
+                res_data = [[NSData dataWithBytesNoCopy:q length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(q);
+        }
+   }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_scalarmult_ed25519_base_noclamp_sync:(NSString*)n)
+{
+    const NSData *dn = [[NSData alloc] initWithBase64EncodedString:n options:0];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!dn)
+        res_code = ERR_CODE_FAILURE;
+    else if (dn.length != crypto_core_ed25519_SCALARBYTES)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *q = (unsigned char *) sodium_malloc(crypto_core_ed25519_BYTES);
+        if (!q)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            if (crypto_scalarmult_ed25519_base_noclamp(q, [dn bytes]) != 0)
+                res_code = ERR_CODE_FAILURE;
+            else
+                res_data = [[NSData dataWithBytesNoCopy:q length:crypto_core_ed25519_SCALARBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(q);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_generichash_sync:(NSUInteger)hash_length msg:(NSString*)msg key:(NSString*)key)
+{
+    const NSData *d_msg = [[NSData alloc] initWithBase64EncodedString:msg options:0];
+    const NSData *d_key;
+    unsigned char *p_key = nil;
+    unsigned long long n_key = 0;
+
+    if ([key length] > 0)
+    {
+        d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
+        p_key = [d_key bytes];
+        n_key = [d_key length];
+    }
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (!d_msg)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        unsigned char *res = (unsigned char *) sodium_malloc(hash_length);
+        if (!res)
+            res_code = ERR_CODE_FAILURE;
+        else {
+            int result= crypto_generichash(res, (u_int32_t)hash_length, [d_msg bytes], d_msg.length, p_key, n_key);
+            if (result != 0)
+                res_code = ERR_CODE_FAILURE;
+            else
+                res_data = [[NSData dataWithBytesNoCopy:res length:hash_length freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+            sodium_free(res);
+        }
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_aead_chacha20poly1305_ietf_keygen_sync)
+{
+    unsigned char *p = (unsigned char *) sodium_malloc(crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (p == NULL) {
+        res_code = ERR_CODE_FAILURE;
+    } else {
+        crypto_aead_chacha20poly1305_ietf_keygen(p);
+        res_data = [[NSData dataWithBytesNoCopy:p length:crypto_aead_xchacha20poly1305_ietf_KEYBYTES freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+        sodium_free(p);
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_aead_xchacha20poly1305_ietf_encrypt_sync:(NSString*)message additional_data:(NSString*)additional_data secret_nonce:(NSString*)secret_nonce public_nonce:(NSString*)public_nonce key:(NSString*)key)
+{
+    const NSData *d_message;
+    const NSData *d_additional_data;
+    const NSData *d_secret_nonce;
+    const NSData *d_public_nonce;
+    const NSData *d_key;
+
+    unsigned char *p_message = nil;
+    unsigned char *p_additional_data = nil;
+    unsigned char *p_secret_nonce = nil;
+    unsigned char *p_public_nonce = nil;
+    unsigned char *p_key = nil;
+
+    unsigned long long n_message = 0;
+    unsigned long long n_additional_data = 0;
+
+    d_message = [[NSData alloc] initWithBase64EncodedString:message options:0];
+    p_message = [d_message bytes];
+    n_message = [d_message length];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if ([additional_data length] > 0)
+    {
+        d_additional_data = [[NSData alloc] initWithBase64EncodedString:additional_data options:0];
+        p_additional_data = [d_additional_data bytes];
+        n_additional_data = [d_additional_data length];
+    }
+
+    if ([secret_nonce length] > 0)
+    {
+        d_secret_nonce = [[NSData alloc] initWithBase64EncodedString:secret_nonce options:0];
+        p_secret_nonce = [d_secret_nonce bytes];
+    }
+
+    if ([public_nonce length] > 0)
+    {
+        d_public_nonce = [[NSData alloc] initWithBase64EncodedString:public_nonce options:0];
+        p_public_nonce = [d_public_nonce bytes];
+    }
+
+    if ([secret_nonce length] > 0)
+    {
+        d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
+        p_key = [d_key bytes];
+    }
+    unsigned char *p_ciphertext = (unsigned char *) sodium_malloc(n_message + 16);
+    unsigned long long ciphertext_len;
+
+    if (p_ciphertext == NULL) {
+        res_code = ERR_CODE_FAILURE;
+    } else {
+        int result = crypto_aead_xchacha20poly1305_ietf_encrypt(
+            p_ciphertext,
+            &ciphertext_len,
+            p_message,
+            n_message,
+            p_additional_data,
+            n_additional_data,
+            p_secret_nonce,
+            p_public_nonce,
+            p_key);
+
+        if (result != 0)
+            res_code = ERR_CODE_FAILURE;
+        else
+            res_data = [[NSData dataWithBytesNoCopy:p_ciphertext length:ciphertext_len freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+        sodium_free(p_ciphertext);
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_aead_xchacha20poly1305_ietf_decrypt_sync:(NSString*)secret_nonce ciphertext:(NSString*)ciphertext additional_data:(NSString*)additional_data public_nonce:(NSString*)public_nonce key:(NSString*)key)
+{
+    const NSData *d_ciphertext;
+    const NSData *d_additional_data;
+    const NSData *d_secret_nonce;
+    const NSData *d_public_nonce;
+    const NSData *d_key;
+
+    unsigned char *p_ciphertext = nil;
+    unsigned char *p_additional_data = nil;
+    unsigned char *p_secret_nonce = nil;
+    unsigned char *p_public_nonce = nil;
+    unsigned char *p_key = nil;
+
+    unsigned long long n_ciphertext = 0;
+    unsigned long long n_additional_data = 0;
+
+    d_ciphertext = [[NSData alloc] initWithBase64EncodedString:ciphertext options:0];
+    p_ciphertext = [d_ciphertext bytes];
+    n_ciphertext = [d_ciphertext length];
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if ([additional_data length] > 0)
+    {
+        d_additional_data = [[NSData alloc] initWithBase64EncodedString:additional_data options:0];
+        p_additional_data = [d_additional_data bytes];
+        n_additional_data = [d_additional_data length];
+    }
+
+    if ([secret_nonce length] > 0)
+    {
+        d_secret_nonce = [[NSData alloc] initWithBase64EncodedString:secret_nonce options:0];
+        p_secret_nonce = [d_secret_nonce bytes];
+    }
+
+    if ([public_nonce length] > 0)
+    {
+        d_public_nonce = [[NSData alloc] initWithBase64EncodedString:public_nonce options:0];
+        p_public_nonce = [d_public_nonce bytes];
+    }
+
+    if ([secret_nonce length] > 0)
+    {
+        d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
+        p_key = [d_key bytes];
+    }
+    unsigned char *p_message = (unsigned char *) sodium_malloc(n_ciphertext);
+    unsigned long long n_message;
+
+    if (p_message == NULL) {
+        res_code = ERR_CODE_FAILURE;
+    } else {
+        int result = crypto_aead_xchacha20poly1305_ietf_decrypt(
+            p_message,
+            &n_message,
+            p_secret_nonce,
+            p_ciphertext,
+            n_ciphertext,
+            p_additional_data,
+            n_additional_data,
+            p_public_nonce,
+            p_key);
+
+        if (result != 0)
+            res_code = ERR_CODE_FAILURE;
+        else
+            res_data = [[NSData dataWithBytesNoCopy:p_message length:n_message freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+        sodium_free(p_message);
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(randombytes_buf_sync:(NSUInteger)size)
+{
+    unsigned char *buf = (unsigned char *) sodium_malloc((u_int32_t)size);
+
+    NSString* res_code = RES_CODE_SUCCESS;
+    NSString* res_data = @"";
+    if (buf == NULL)
+        res_code = ERR_CODE_FAILURE;
+    else {
+        randombytes_buf(buf,(u_int32_t)size);
+        res_data = [[NSData dataWithBytesNoCopy:buf length:size freeWhenDone:NO]  base64EncodedStringWithOptions:0];
+        sodium_free(buf);
+    }
+
+    NSMutableDictionary * response = [NSMutableDictionary new];
+    [response setValue:res_code forKey:@"code"];
+    [response setValue:res_data forKey:@"data"];
+
+    NSData* nsData = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
+    NSString* nsString = [[NSString alloc] initWithData:nsData encoding:NSUTF8StringEncoding];
+
+    return nsString;
 }
 
 @end
