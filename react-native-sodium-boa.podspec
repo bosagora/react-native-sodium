@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.homepage     = package['homepage']
   s.platform     = :ios, "9.0"
 
-  s.source       = { :git => "https://github.com/lyubo/react-native-sodium.git", :tag => "v#{s.version}" }
+  s.source       = { :git => "https://github.com/bosagora/react-native-sodium-boa.git", :tag => "v#{s.version}" }
   s.source_files  = ["ios/**/*.{h,m}","libsodium/libsodium-ios/**/*.{h,m}"]
 
   s.vendored_libraries = 'libsodium/libsodium-ios/lib/libsodium.a'

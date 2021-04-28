@@ -1,24 +1,28 @@
 {
-  "name": "react-native-sodium",
-  "repository": {
-    "type" : "git",
-    "url" : "https://github.com/lyubo/react-native-sodium.git"
-  },
-  "scripts": {
-    "postinstall": "tar -xzf precompiled.tgz",
-    "rebuild": "./build.sh"
-  },
-  "version": "0.3.9",
-  "description": "The Sodium crypto library for React Native.",
-  "author": "Lyubomir Ivanov",
-  "main": "index.js",
-  "nativePackage": true,
-  "license": "ISC",
-  "homepage": "https://github.com/lyubo/react-native-sodium",
-  "keywords": [
-    "react-native",
-    "crypto",
-    "nacl",
-    "sodium"
-  ]
+    "name": "react-native-sodium-boa",
+    "version": "0.0.12",
+    "description": "The Sodium crypto library for React Native",
+    "nativePackage": true,
+    "main": "index.js",
+    "scripts": {
+        "postinstall": "tar -xzf precompiled.tgz",
+        "rebuild": "./build.sh"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/bosagora/react-native-sodium-boa.git"
+    },
+    "author": "BOSAGORA Foundation",
+    "contributors": [
+        "Lyubomir Ivanov (https://github.com/lyubo/react-native-sodium",
+        "BOSAGORA Foundation"
+    ],
+    "license": "ISC",
+    "homepage": "https://github.com/bosagora/react-native-sodium-boa",
+    "keywords": [
+        "react-native",
+        "crypto",
+        "nacl",
+        "sodium-boa"
+    ]
 }
