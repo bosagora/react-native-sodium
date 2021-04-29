@@ -930,7 +930,7 @@ RCT_EXPORT_METHOD(crypto_aead_xchacha20poly1305_ietf_encrypt:(NSString*)message 
         p_public_nonce = [d_public_nonce bytes];
     }
 
-    if ([secret_nonce length] > 0)
+    if ([key length] > 0)
     {
         d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
         p_key = [d_key bytes];
@@ -1000,7 +1000,7 @@ RCT_EXPORT_METHOD(crypto_aead_xchacha20poly1305_ietf_decrypt:(NSString*)secret_n
         p_public_nonce = [d_public_nonce bytes];
     }
 
-    if ([secret_nonce length] > 0)
+    if ([key length] > 0)
     {
         d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
         p_key = [d_key bytes];
@@ -1660,7 +1660,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_aead_xchacha20poly1305_ietf_encryp
         p_public_nonce = [d_public_nonce bytes];
     }
 
-    if ([secret_nonce length] > 0)
+    if ([key length] > 0)
     {
         d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
         p_key = [d_key bytes];
@@ -1741,7 +1741,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(crypto_aead_xchacha20poly1305_ietf_decryp
         p_public_nonce = [d_public_nonce bytes];
     }
 
-    if ([secret_nonce length] > 0)
+    if ([key length] > 0)
     {
         d_key = [[NSData alloc] initWithBase64EncodedString:key options:0];
         p_key = [d_key bytes];
