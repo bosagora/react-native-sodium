@@ -39,6 +39,9 @@ public class RCTSodiumModule extends ReactContextBaseJavaModule {
   static final String ERR_BAD_SIG = "BAD_SIG";
   static final String ERR_FAILURE = "FAILURE";
 
+  static final String ERR_CODE_FAILURE = "FAILURE";
+  static final String RES_CODE_SUCCESS = "SUCCESS";
+
   public RCTSodiumModule(ReactApplicationContext reactContext) {
     super(reactContext);
     Sodium.loadLibrary();
@@ -83,6 +86,12 @@ public class RCTSodiumModule extends ReactContextBaseJavaModule {
      constants.put("crypto_scalarmult_BYTES", Sodium.crypto_scalarmult_bytes());
      constants.put("crypto_scalarmult_SCALARBYTES", Sodium.crypto_scalarmult_scalarbytes());
 
+     constants.put("crypto_core_ed25519_BYTES", Sodium.crypto_core_ed25519_bytes());
+     constants.put("crypto_core_ed25519_UNIFORMBYTES", Sodium.crypto_core_ed25519_uniformbytes());
+     constants.put("crypto_core_ed25519_SCALARBYTES", Sodium.crypto_core_ed25519_scalarbytes());
+     constants.put("crypto_core_ed25519_NONREDUCEDSCALARBYTES", Sodium.crypto_core_ed25519_nonreducedscalarbytes());
+     constants.put("crypto_aead_xchacha20poly1305_ietf_KEYBYTES", Sodium.crypto_aead_xchacha20poly1305_ietf_keybytes());
+     constants.put("crypto_aead_xchacha20poly1305_ietf_NPUBBYTES", Sodium.crypto_aead_xchacha20poly1305_ietf_npubbytes());
      return constants;
   }
 
@@ -698,5 +707,915 @@ public class RCTSodiumModule extends ReactContextBaseJavaModule {
     catch(Throwable t) {
       p.reject(ESODIUM, ERR_FAILURE, t);
     }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_random(final Promise promise) {
+    try {
+      byte[] p = new byte[Sodium.crypto_core_ed25519_bytes()];
+      Sodium.crypto_core_ed25519_random(p);
+      promise.resolve(Base64.encodeToString(p,Base64.NO_WRAP));
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_from_uniform(final String r, final Promise promise) {
+    try {
+      byte[] rb = Base64.decode(r, Base64.NO_WRAP);
+      if (rb.length != Sodium.crypto_core_ed25519_bytes())
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] p = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_core_ed25519_from_uniform(p, rb);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(p,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_add(final String p, final String q, final Promise promise) {
+    try {
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      byte[] qb = Base64.decode(q, Base64.NO_WRAP);
+      if ((pb.length != Sodium.crypto_core_ed25519_bytes()) || (qb.length != Sodium.crypto_core_ed25519_bytes()))
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] r = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_core_ed25519_add(r, pb, qb);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(r,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_sub(final String p, final String q, final Promise promise) {
+    try {
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      byte[] qb = Base64.decode(q, Base64.NO_WRAP);
+      if ((pb.length != Sodium.crypto_core_ed25519_bytes()) || (qb.length != Sodium.crypto_core_ed25519_bytes()))
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] r = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_core_ed25519_sub(r, pb, qb);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(r,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_is_valid_point(final String p, final Promise promise) {
+    try {
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      if (pb.length != Sodium.crypto_core_ed25519_bytes())
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        int result = Sodium.crypto_core_ed25519_is_valid_point(pb);
+        promise.resolve(result);
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_scalar_random(final Promise promise) {
+    try {
+      byte[] r = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+      Sodium.crypto_core_ed25519_scalar_random(r);
+      promise.resolve(Base64.encodeToString(r,Base64.NO_WRAP));
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_scalar_add(final String x, final String y, final Promise promise) {
+    try {
+      byte[] xb = Base64.decode(x, Base64.NO_WRAP);
+      byte[] yb = Base64.decode(y, Base64.NO_WRAP);
+      if ((xb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (yb.length != Sodium.crypto_core_ed25519_scalarbytes()))
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_add(z, xb, yb);
+        promise.resolve(Base64.encodeToString(z,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_scalar_sub(final String x, final String y, final Promise promise) {
+    try {
+      byte[] xb = Base64.decode(x, Base64.NO_WRAP);
+      byte[] yb = Base64.decode(y, Base64.NO_WRAP);
+      if ((xb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (yb.length != Sodium.crypto_core_ed25519_scalarbytes()))
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_sub(z, xb, yb);
+        promise.resolve(Base64.encodeToString(z,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_scalar_mul(final String x, final String y, final Promise promise) {
+    try {
+      byte[] xb = Base64.decode(x, Base64.NO_WRAP);
+      byte[] yb = Base64.decode(y, Base64.NO_WRAP);
+      if ((xb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (yb.length != Sodium.crypto_core_ed25519_scalarbytes()))
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_mul(z, xb, yb);
+        promise.resolve(Base64.encodeToString(z,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_scalar_negate(final String s, final Promise promise) {
+    try {
+      byte[] sb = Base64.decode(s, Base64.NO_WRAP);
+      if (sb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_negate(z, sb);
+        promise.resolve(Base64.encodeToString(z,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_scalar_complement(final String s, final Promise promise) {
+    try {
+      byte[] sb = Base64.decode(s, Base64.NO_WRAP);
+      if (sb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_complement(z, sb);
+        promise.resolve(Base64.encodeToString(z,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_scalar_invert(final String s, final Promise promise) {
+    try {
+      byte[] sb = Base64.decode(s, Base64.NO_WRAP);
+      if (sb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        int result = Sodium.crypto_core_ed25519_scalar_invert(z, sb);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(z,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_core_ed25519_scalar_reduce(final String s, final Promise promise) {
+    try {
+      byte[] sb = Base64.decode(s, Base64.NO_WRAP);
+      if (sb.length != Sodium.crypto_core_ed25519_nonreducedscalarbytes())
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_reduce(z, sb);
+        promise.resolve(Base64.encodeToString(z,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_scalarmult_ed25519(final String n, final String p, final Promise promise) {
+    try {
+      byte[] nb = Base64.decode(n, Base64.NO_WRAP);
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      if ((nb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (pb.length != Sodium.crypto_core_ed25519_bytes()))
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] q = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_scalarmult_ed25519(q, nb, pb);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(q,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_scalarmult_ed25519_noclamp(final String n, final String p, final Promise promise) {
+    try {
+      byte[] nb = Base64.decode(n, Base64.NO_WRAP);
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      if ((nb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (pb.length != Sodium.crypto_core_ed25519_bytes()))
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] q = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_scalarmult_ed25519_noclamp(q, nb, pb);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(q,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_scalarmult_ed25519_base(final String n, final Promise promise) {
+    try {
+      byte[] nb = Base64.decode(n, Base64.NO_WRAP);
+      if (nb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] q = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_scalarmult_ed25519_base(q, nb);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(q,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_scalarmult_ed25519_base_noclamp(final String n, final Promise promise) {
+    try {
+      byte[] nb = Base64.decode(n, Base64.NO_WRAP);
+      if (nb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] q = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_scalarmult_ed25519_base_noclamp(q, nb);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(q,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_generichash(final int hash_length, final String msg, final String key, final Promise promise) {
+    try {
+      byte[] msgb = Base64.decode(msg, Base64.NO_WRAP);
+      byte[] keyb = Base64.decode(key, Base64.NO_WRAP);
+
+      if (msgb.length == 0)
+        promise.reject(ESODIUM,ERR_BAD_KEY);
+      else {
+        byte[] q = new byte[hash_length];
+        int result = Sodium.crypto_generichash(q, hash_length, msgb, msgb.length, keyb, keyb.length);
+        if (result != 0)
+          promise.reject(ESODIUM,ERR_BAD_KEY);
+        else
+          promise.resolve(Base64.encodeToString(q,Base64.NO_WRAP));
+      }
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_aead_chacha20poly1305_ietf_keygen(final Promise promise) {
+    try {
+      byte[] p = new byte[Sodium.crypto_aead_xchacha20poly1305_ietf_keybytes()];
+      Sodium.crypto_aead_chacha20poly1305_ietf_keygen(p);
+      promise.resolve(Base64.encodeToString(p,Base64.NO_WRAP));
+    }
+    catch (Throwable t) {
+      promise.reject(ESODIUM,ERR_FAILURE,t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_aead_xchacha20poly1305_ietf_encrypt(
+          final String message,
+          final String additional_data,
+          final String secret_nonce,
+          final String public_nonce,
+          final String key,
+          final Promise promise) {
+
+    try {
+      byte[] b_message = Base64.decode(message, Base64.NO_WRAP);
+      byte[] b_additional_data = Base64.decode(additional_data, Base64.NO_WRAP);
+      byte[] b_secret_nonce = Base64.decode(secret_nonce, Base64.NO_WRAP);
+      byte[] b_public_nonce = Base64.decode(public_nonce, Base64.NO_WRAP);
+      byte[] b_key = Base64.decode(key, Base64.NO_WRAP);
+
+      byte[] q = new byte[b_message.length + 16];
+      int result = Sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
+              q,
+              b_message,
+              b_message.length,
+              b_additional_data,
+              b_additional_data.length,
+              b_secret_nonce,
+              b_secret_nonce.length,
+              b_public_nonce,
+              b_key);
+      if (result < 0)
+        promise.reject(ESODIUM, ERR_BAD_KEY);
+      else
+        promise.resolve(Base64.encodeToString(q, 0, result, Base64.NO_WRAP));
+    } catch (Throwable t) {
+      promise.reject(ESODIUM, ERR_FAILURE, t);
+    }
+  }
+
+  @ReactMethod
+  public void crypto_aead_xchacha20poly1305_ietf_decrypt(
+          final String secret_nonce,
+          final String ciphertext,
+          final String additional_data,
+          final String public_nonce,
+          final String key,
+          final Promise promise){
+    try {
+      byte[] b_secret_nonce = Base64.decode(secret_nonce, Base64.NO_WRAP);
+      byte[] b_ciphertext = Base64.decode(ciphertext, Base64.NO_WRAP);
+      byte[] b_additional_data = Base64.decode(additional_data, Base64.NO_WRAP);
+      byte[] b_public_nonce = Base64.decode(public_nonce, Base64.NO_WRAP);
+      byte[] b_key = Base64.decode(key, Base64.NO_WRAP);
+
+      byte[] q = new byte[b_ciphertext.length];
+      int result = Sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
+              q,
+              b_secret_nonce,
+              b_secret_nonce.length,
+              b_ciphertext,
+              b_ciphertext.length,
+              b_additional_data,
+              b_additional_data.length,
+              b_public_nonce,
+              b_key);
+
+      if (result < 0)
+        promise.reject(ESODIUM, ERR_BAD_KEY);
+      else
+        promise.resolve(Base64.encodeToString(q, 0, result, Base64.NO_WRAP));
+    } catch (Throwable t) {
+      promise.reject(ESODIUM, ERR_FAILURE, t);
+    }
+  }
+
+
+  ///// SynchronousMethod
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String randombytes_buf_sync(int size) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] buf = new byte[size];
+      Sodium.randombytes_buf(buf, size);
+      res_data = Base64.encodeToString(buf,Base64.NO_WRAP);
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_random_sync() {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] p = new byte[Sodium.crypto_core_ed25519_bytes()];
+      Sodium.crypto_core_ed25519_random(p);
+      res_data = Base64.encodeToString(p,Base64.NO_WRAP);
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_from_uniform_sync(final String r) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] rb = Base64.decode(r, Base64.NO_WRAP);
+      if (rb.length != Sodium.crypto_core_ed25519_bytes())
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] p = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_core_ed25519_from_uniform(p, rb);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(p,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_add_sync(final String p, final String q) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      byte[] qb = Base64.decode(q, Base64.NO_WRAP);
+      if ((pb.length != Sodium.crypto_core_ed25519_bytes()) || (qb.length != Sodium.crypto_core_ed25519_bytes()))
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] r = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_core_ed25519_add(r, pb, qb);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(r,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_sub_sync(final String p, final String q) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      byte[] qb = Base64.decode(q, Base64.NO_WRAP);
+      if ((pb.length != Sodium.crypto_core_ed25519_bytes()) || (qb.length != Sodium.crypto_core_ed25519_bytes()))
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] r = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_core_ed25519_sub(r, pb, qb);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(r,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_is_valid_point_sync(final String p) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      if (pb.length != Sodium.crypto_core_ed25519_bytes())
+        res_code = ERR_CODE_FAILURE;
+      else {
+        int result = Sodium.crypto_core_ed25519_is_valid_point(pb);
+        res_data = Integer.toString(result);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_scalar_random_sync() {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] r = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+      Sodium.crypto_core_ed25519_scalar_random(r);
+      res_data = Base64.encodeToString(r,Base64.NO_WRAP);
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_scalar_add_sync(final String x, final String y) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] xb = Base64.decode(x, Base64.NO_WRAP);
+      byte[] yb = Base64.decode(y, Base64.NO_WRAP);
+      if ((xb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (yb.length != Sodium.crypto_core_ed25519_scalarbytes()))
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_add(z, xb, yb);
+        res_data = Base64.encodeToString(z,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_scalar_sub_sync(final String x, final String y) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] xb = Base64.decode(x, Base64.NO_WRAP);
+      byte[] yb = Base64.decode(y, Base64.NO_WRAP);
+      if ((xb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (yb.length != Sodium.crypto_core_ed25519_scalarbytes()))
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_sub(z, xb, yb);
+        res_data = Base64.encodeToString(z,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_scalar_mul_sync(final String x, final String y) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] xb = Base64.decode(x, Base64.NO_WRAP);
+      byte[] yb = Base64.decode(y, Base64.NO_WRAP);
+      if ((xb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (yb.length != Sodium.crypto_core_ed25519_scalarbytes()))
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_mul(z, xb, yb);
+        res_data = Base64.encodeToString(z,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_scalar_negate_sync(final String s) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] sb = Base64.decode(s, Base64.NO_WRAP);
+      if (sb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_negate(z, sb);
+        res_data = Base64.encodeToString(z,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_scalar_complement_sync(final String s) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] sb = Base64.decode(s, Base64.NO_WRAP);
+      if (sb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_complement(z, sb);
+        res_data = Base64.encodeToString(z,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_scalar_invert_sync(final String s) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] sb = Base64.decode(s, Base64.NO_WRAP);
+      if (sb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        int result = Sodium.crypto_core_ed25519_scalar_invert(z, sb);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(z,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_core_ed25519_scalar_reduce_sync(final String s) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] sb = Base64.decode(s, Base64.NO_WRAP);
+      if (sb.length != Sodium.crypto_core_ed25519_nonreducedscalarbytes())
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] z = new byte[Sodium.crypto_core_ed25519_scalarbytes()];
+        Sodium.crypto_core_ed25519_scalar_reduce(z, sb);
+        res_data = Base64.encodeToString(z,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_scalarmult_ed25519_sync(final String n, final String p) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] nb = Base64.decode(n, Base64.NO_WRAP);
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      if ((nb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (pb.length != Sodium.crypto_core_ed25519_bytes()))
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] q = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_scalarmult_ed25519(q, nb, pb);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(q,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_scalarmult_ed25519_noclamp_sync(final String n, final String p) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] nb = Base64.decode(n, Base64.NO_WRAP);
+      byte[] pb = Base64.decode(p, Base64.NO_WRAP);
+      if ((nb.length != Sodium.crypto_core_ed25519_scalarbytes()) || (pb.length != Sodium.crypto_core_ed25519_bytes()))
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] q = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_scalarmult_ed25519_noclamp(q, nb, pb);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(q,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_scalarmult_ed25519_base_sync(final String n) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] nb = Base64.decode(n, Base64.NO_WRAP);
+      if (nb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] q = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_scalarmult_ed25519_base(q, nb);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(q,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_scalarmult_ed25519_base_noclamp_sync(final String n) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] nb = Base64.decode(n, Base64.NO_WRAP);
+      if (nb.length != Sodium.crypto_core_ed25519_scalarbytes())
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] q = new byte[Sodium.crypto_core_ed25519_bytes()];
+        int result = Sodium.crypto_scalarmult_ed25519_base_noclamp(q, nb);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(q,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_generichash_sync(final int hash_length, final String msg, final String key) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] msgb = Base64.decode(msg, Base64.NO_WRAP);
+      byte[] keyb = Base64.decode(key, Base64.NO_WRAP);
+
+      if (msgb.length == 0)
+        res_code = ERR_CODE_FAILURE;
+      else {
+        byte[] q = new byte[hash_length];
+        int result = Sodium.crypto_generichash(q, hash_length, msgb, msgb.length, keyb, keyb.length);
+        if (result != 0)
+          res_code = ERR_CODE_FAILURE;
+        else
+          res_data = Base64.encodeToString(q,Base64.NO_WRAP);
+      }
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_aead_chacha20poly1305_ietf_keygen_sync() {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] p = new byte[Sodium.crypto_aead_xchacha20poly1305_ietf_keybytes()];
+      Sodium.crypto_aead_chacha20poly1305_ietf_keygen(p);
+      res_data = Base64.encodeToString(p,Base64.NO_WRAP);
+    }
+    catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_aead_xchacha20poly1305_ietf_encrypt_sync(
+          final String message,
+          final String additional_data,
+          final String secret_nonce,
+          final String public_nonce,
+          final String key
+          ) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+
+    try {
+      byte[] b_message = Base64.decode(message, Base64.NO_WRAP);
+      byte[] b_additional_data = Base64.decode(additional_data, Base64.NO_WRAP);
+      byte[] b_secret_nonce = Base64.decode(secret_nonce, Base64.NO_WRAP);
+      byte[] b_public_nonce = Base64.decode(public_nonce, Base64.NO_WRAP);
+      byte[] b_key = Base64.decode(key, Base64.NO_WRAP);
+
+      byte[] q = new byte[b_message.length + 16];
+      int result = Sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
+              q,
+              b_message,
+              b_message.length,
+              b_additional_data,
+              b_additional_data.length,
+              b_secret_nonce,
+              b_secret_nonce.length,
+              b_public_nonce,
+              b_key);
+      if (result < 0)
+        res_code = ERR_CODE_FAILURE;
+      else
+        res_data = Base64.encodeToString(q, 0, result, Base64.NO_WRAP);
+    } catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String crypto_aead_xchacha20poly1305_ietf_decrypt_sync(
+          final String secret_nonce,
+          final String ciphertext,
+          final String additional_data,
+          final String public_nonce,
+          final String key
+          ) {
+    String res_code = RES_CODE_SUCCESS;
+    String res_data = "";
+    try {
+      byte[] b_secret_nonce = Base64.decode(secret_nonce, Base64.NO_WRAP);
+      byte[] b_ciphertext = Base64.decode(ciphertext, Base64.NO_WRAP);
+      byte[] b_additional_data = Base64.decode(additional_data, Base64.NO_WRAP);
+      byte[] b_public_nonce = Base64.decode(public_nonce, Base64.NO_WRAP);
+      byte[] b_key = Base64.decode(key, Base64.NO_WRAP);
+
+      byte[] q = new byte[b_ciphertext.length];
+      int result = Sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
+              q,
+              b_secret_nonce,
+              b_secret_nonce.length,
+              b_ciphertext,
+              b_ciphertext.length,
+              b_additional_data,
+              b_additional_data.length,
+              b_public_nonce,
+              b_key);
+
+      if (result < 0)
+        res_code = ERR_CODE_FAILURE;
+      else
+        res_data = Base64.encodeToString(q, 0, result, Base64.NO_WRAP);
+    } catch (Throwable t) {
+      res_code = ERR_CODE_FAILURE;
+    }
+    return "{\"code\":\"" + res_code + "\", \"data\":\"" + res_data +"\"}";
   }
 }
