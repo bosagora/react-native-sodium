@@ -1,4 +1,4 @@
-declare module "react-native-sodium" {
+declare module "react-native-sodium-boa" {
   export function sodium_version_string(): Promise<string>;
 
   //
@@ -64,9 +64,9 @@ declare module "react-native-sodium" {
    * Encrypts a message, with a nonce and a key.
    */
   export function crypto_secretbox_easy(
-    message: string,
-    nonce: string,
-    key: string
+      message: string,
+      nonce: string,
+      key: string
   ): Promise<string>;
 
   /**
@@ -74,9 +74,9 @@ declare module "react-native-sodium" {
    * The nonce and the key have to match the used to encrypt and authenticate the message.
    */
   export function crypto_secretbox_open_easy(
-    cipher: string,
-    nonce: string,
-    key: string
+      cipher: string,
+      nonce: string,
+      key: string
   ): Promise<string>;
 
   //
@@ -107,9 +107,9 @@ declare module "react-native-sodium" {
    * Verifies that the tag is valid for the message and the key.
    */
   export function crypto_auth_verify(
-    tag: string,
-    message: string,
-    key: string
+      tag: string,
+      message: string,
+      key: string
   ): Promise<number>;
 
   //
@@ -154,19 +154,19 @@ declare module "react-native-sodium" {
    * Encrypts a message, with a recipient's public key, a sender's secret key and a nonce.
    */
   export function crypto_box_easy(
-    message: string,
-    nonce: string,
-    publicKey: string,
-    secretKey: string
+      message: string,
+      nonce: string,
+      publicKey: string,
+      secretKey: string
   ): Promise<string>;
 
   /**
    * Computes a shared secret key given a precalculated shared secret key.
    */
   export function crypto_box_easy_afternm(
-    message: string,
-    nonce: string,
-    k: string
+      message: string,
+      nonce: string,
+      k: string
   ): Promise<string>;
 
   /**
@@ -176,27 +176,27 @@ declare module "react-native-sodium" {
    * of the recipient that is willing to verify and decrypt it.
    */
   export function crypto_box_open_easy(
-    cipher: string,
-    nonce: string,
-    publicKey: string,
-    secretKey: string
+      cipher: string,
+      nonce: string,
+      publicKey: string,
+      secretKey: string
   ): Promise<string>;
 
   /**
    * Computes a shared secret key given a precalculated shared secret key.
    */
   export function crypto_box_open_easy_afternm(
-    cipher: string,
-    nonce: string,
-    k: string
+      cipher: string,
+      nonce: string,
+      k: string
   ): Promise<string>;
 
   /**
    * Computes a shared secret key given a public key pk and a secret key.
    */
   export function crypto_box_beforenm(
-    publicKey: string,
-    secretKey: string
+      publicKey: string,
+      secretKey: string
   ): Promise<string>;
 
   /**
@@ -204,8 +204,8 @@ declare module "react-native-sodium" {
    */
   export function crypto_scalarmult_base(secretKey: string): Promise<string>;
   export function crypto_scalarmult(
-    secretKey: string,
-    publicKey: string
+      secretKey: string,
+      publicKey: string
   ): Promise<string>;
 
   //
@@ -216,17 +216,17 @@ declare module "react-native-sodium" {
    * these messages, using its private key and it cannot verify the identity of the sender.
    */
   export function crypto_box_seal(
-    message: string,
-    publicKey: string
+      message: string,
+      publicKey: string
   ): Promise<string>;
 
   /**
    * Decrypts the ciphertext from crypto_box_seal, using the key pair.
    */
   export function crypto_box_seal_open(
-    cipher: string,
-    publicKey: string,
-    secretKey: string
+      cipher: string,
+      publicKey: string,
+      secretKey: string
   ): Promise<string>;
 
   //
@@ -256,17 +256,17 @@ declare module "react-native-sodium" {
    * Signs the message using the secret key.
    */
   export function crypto_sign_detached(
-    msg: string,
-    secretKey: string
+      msg: string,
+      secretKey: string
   ): Promise<string>;
 
   /**
    * Verifies that sig is a valid signature for the message using the signer's public key.
    */
   export function crypto_sign_verify_detached(
-    sig: string,
-    msg: string,
-    publicKey: string
+      sig: string,
+      msg: string,
+      publicKey: string
   ): Promise<boolean>;
 
   /**
@@ -278,35 +278,35 @@ declare module "react-native-sodium" {
    * Get key pair derived from a single key seed.
    */
   export function crypto_sign_seed_keypair(
-    seed: string
+      seed: string
   ): Promise<{ sk: string; pk: string }>;
 
   /**
    * Extracts the seed from the secret key.
    */
   export function crypto_sign_ed25519_sk_to_seed(
-    secretKey: string
+      secretKey: string
   ): Promise<string>;
 
   /**
    * Converts an Ed25519 public key to an X25519 public key.
    */
   export function crypto_sign_ed25519_pk_to_curve25519(
-    publicKey: string
+      publicKey: string
   ): Promise<string>;
 
   /**
    * Converts an Ed25519 secret key to an X25519 secret key
    */
   export function crypto_sign_ed25519_sk_to_curve25519(
-    secretKey: string
+      secretKey: string
   ): Promise<string>;
 
   /**
    * Extracts the seed from the secret key sk.
    */
   export function crypto_sign_ed25519_sk_to_pk(
-    secretKey: string
+      secretKey: string
   ): Promise<string>;
 
   //
@@ -316,12 +316,12 @@ declare module "react-native-sodium" {
    * Derives an key from a password and a salt whose fixed length is crypto_pwhash_SALTBYTES bytes.
    */
   export function crypto_pwhash(
-    keylen: number,
-    password: string,
-    salt: string,
-    opslimit: number,
-    memlimit: number,
-    algo: number
+      keylen: number,
+      password: string,
+      salt: string,
+      opslimit: number,
+      memlimit: number,
+      algo: number
   ): Promise<string>;
 
   /**
@@ -395,37 +395,27 @@ declare module "react-native-sodium" {
   export function crypto_scalarmult_ed25519_noclamp(n: string, p: string): Promise<string>;
 
   export function crypto_generichash(
-          hash_length: string,
-          message: string,
-          key: string
-    ): Promise<string>;
-
-  export function crypto_generichash_init(key: string, hash_length: string): Promise<string>;
-  export function crypto_generichash_update(
-          state_address: string,
-          message_chunk: string
-    ): Promise<void>;
-  export function crypto_generichash_final(
-          state_address: string,
-          hash_length: string
-    ): Promise<string>;
+      hash_length: number,
+      message: string,
+      key: string
+  ): Promise<string>;
 
   export function crypto_aead_chacha20poly1305_ietf_keygen(): Promise<string>;
   export function crypto_aead_xchacha20poly1305_ietf_encrypt(
-          message: string,
-          additional_data: string,
-          secret_nonce: string,
-          public_nonce: string,
-          key: string
-    ): Promise<string>;
+      message: string,
+      additional_data: string,
+      secret_nonce: string,
+      public_nonce: string,
+      key: string
+  ): Promise<string>;
 
   export function crypto_aead_xchacha20poly1305_ietf_decrypt(
-          secret_nonce: string,
-          ciphertext: string,
-          additional_data: string,
-          public_nonce: string,
-          key: string
-    ): Promise<string>;
+      secret_nonce: string,
+      ciphertext: string,
+      additional_data: string,
+      public_nonce: string,
+      key: string
+  ): Promise<string>;
 
 
 
@@ -449,7 +439,7 @@ declare module "react-native-sodium" {
   export function crypto_scalarmult_ed25519_noclamp_sync(n: string, p: string): string;
 
   export function crypto_generichash_sync(
-      hash_length: string,
+      hash_length: number,
       message: string,
       key: string
   ): string;
@@ -470,4 +460,6 @@ declare module "react-native-sodium" {
       public_nonce: string,
       key: string
   ): string;
+
+  export function randombytes_buf_sync(size: number): string;
 }
